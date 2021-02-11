@@ -6,7 +6,7 @@ import json
 import datetime 
 
 # Database Config
-client = MongoClient('localhost:27017')
+client = MongoClient('35.242.129.23:27017')
 db = client['binance-volume-download']
 volume_collection = db['volume-pings']
 
