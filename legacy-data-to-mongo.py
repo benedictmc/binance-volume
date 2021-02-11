@@ -6,10 +6,15 @@ import json
 import datetime 
 
 # Database Config
-client = MongoClient('localhost:27017')
+password = "!pword1"
+db_id = 'binance-volume-download'
+db_uri = f'mongodb://ben:{password}@35.242.129.237:27017/?authSource=admin&ssl=false'
+
+client = MongoClient(db_uri)
 db = client['binance-volume-download']
 volume_collection = db['volume-pings']
 
+print("Here")
 
 def generate_hash_id(r_id, datetime, coin):
     pump_id = f"{r_id}_{datetime}_{coin}" 
@@ -53,4 +58,4 @@ def add_json_files():
 
 
 add_csv_files()
-add_json_files()
+# add_json_files()
