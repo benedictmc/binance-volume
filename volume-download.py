@@ -13,6 +13,8 @@ import hashlib
 
 
 
+
+
 logging.basicConfig(filename='pump_downloader.log',level=logging.DEBUG)
 logging.info('Pump downloader has started...')
 time_since_last = int(time.time())
@@ -64,6 +66,12 @@ def fetch_pump_data():
             return
     print(f"Adding {len(db_record_list)} to db")
     volume_collection.insert_many(db_record_list)
+
+
+
+def fetch_binance_price_data():
+
+    
 
 
 
