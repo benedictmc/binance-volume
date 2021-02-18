@@ -41,7 +41,7 @@ def volume_stats(uid):
     analysis_data = ohlc_analyis(ohlc_data) 
     analysis_data['coin'] = coin
     analysis_data['date'] = ping['Datetime']
-    analysis_data['_id'] = uid
+    analysis_data['_id'] = uid  
     return jsonify(analysis_data)
 
 

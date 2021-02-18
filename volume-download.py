@@ -10,6 +10,7 @@ import logging
 import subprocess
 from pymongo import MongoClient
 import hashlib
+#!/usr/bin/env python3
 
 
 
@@ -20,10 +21,12 @@ logging.info('Pump downloader has started...')
 time_since_last = int(time.time())
 
 # Database Config
-client = MongoClient('localhost:27017')
+password = "!pword1"
+db_uri = f'mongodb://ben:{password}@35.242.129.237:27017/?authSource=admin&ssl=false'
+
+client = MongoClient(db_uri)
 db = client['binance-volume-download']
 volume_collection = db['volume-pings']
-
 pump_keys = ["Coin", "Pings", "Net Vol BTC", "Net Vol %", "Recent Total Vol BTC", "Recent Vol %", "Recent Net Vol", "Datetime", "id"]
 
 def generate_hash_id(r_id, datetime, coin):
@@ -46,8 +49,6 @@ def fetch_pump_data():
 
     pump_id = r['resu'][-1]
     time_stamp = int(time.time())
-    print("Time since last run:")
-    print(time_stamp - time_since_last)
     time_since_last = time_stamp
     db_record_list = []
 
@@ -64,9 +65,9 @@ def fetch_pump_data():
         else:
             # No new data
             return
-    print(f"Adding {len(db_record_list)} to db")
-    volume_collection.insert_many(db_record_list)
 
+
+    volume_collection.insert_many(db_record_list)
 
 
 def fetch_binance_price_data():

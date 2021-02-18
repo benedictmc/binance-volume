@@ -7,14 +7,12 @@ import datetime
 
 # Database Config
 password = "!pword1"
-db_id = 'binance-volume-download'
 db_uri = f'mongodb://ben:{password}@35.242.129.237:27017/?authSource=admin&ssl=false'
 
 client = MongoClient(db_uri)
 db = client['binance-volume-download']
 volume_collection = db['volume-pings']
 
-print("Here")
 
 def generate_hash_id(r_id, datetime, coin):
     pump_id = f"{r_id}_{datetime}_{coin}" 
@@ -40,22 +38,21 @@ def add_csv_files():
 
 # JSON files
 def add_json_files():
-    rel_path = 'data/real_trading/'
+    rel_path = 'data/json'
     for filename in os.listdir(rel_path):
-        for sub_filename in os.listdir(f"{rel_path}{filename}"):
-            if 'pump_save' in sub_filename:
-                db_record_list = []
-                with open(f"{rel_path}{filename}/pump_save.json", 'r') as f:
-                    pump_save = json.load(f)
-                for key, row in pump_save.items():
-                    hash_id = generate_hash_id(row['id'], row['Datetime'], row['Coin'])
-                    row['_id'] = hash_id
-                    row['leg_id'] = row['uid']
-                    row['Date'] = datetime.datetime.strptime(row['Datetime'], '%H:%M:%S %m/%d/%y')
-                    del row['uid']
-                    db_record_list.append(row)
-                volume_collection.insert_many(db_record_list)
+        db_record_list = []
+        with open(f"{rel_path}/{filename}", 'r') as f:
+            pump_save = json.load(f)
+            
+        for key, row in pump_save.items():
+            hash_id = generate_hash_id(row['id'], row['Datetime'], row['Coin'])
+            row['_id'] = hash_id
+            row['leg_id'] = row['uid']
+            row['Date'] = datetime.datetime.strptime(row['Datetime'], '%H:%M:%S %m/%d/%y')
+            del row['uid']
+            db_record_list.append(row)
+        volume_collection.insert_many(db_record_list)
 
 
-add_csv_files()
-# add_json_files()
+# add_csv_files()
+add_json_files()
