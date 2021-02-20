@@ -52,4 +52,4 @@ def add_json_files():
 
 
 add_csv_files()
-# add_json_files()
+add_json_files()
