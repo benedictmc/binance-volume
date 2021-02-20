@@ -6,10 +6,7 @@ import json
 import datetime 
 
 # Database Config
-password = "!pword1"
-db_uri = f'mongodb://ben:{password}@35.242.129.237:27017/?authSource=admin&ssl=false'
-
-client = MongoClient(db_uri)
+client = MongoClient('localhost', 27017)
 db = client['binance-volume-download']
 volume_collection = db['volume-pings']
 
@@ -22,7 +19,7 @@ def generate_hash_id(r_id, datetime, coin):
 
 # CSV files
 def add_csv_files():
-    rel_path = 'data/coins/pump_data/'
+    rel_path = 'data/csv/'
     for filename in os.listdir(rel_path):
         filepath = f"{rel_path}{filename}"
         df = pd.read_csv(filepath, index_col=0)
@@ -54,5 +51,5 @@ def add_json_files():
         volume_collection.insert_many(db_record_list)
 
 
-# add_csv_files()
-add_json_files()
+add_csv_files()
+# add_json_files()
