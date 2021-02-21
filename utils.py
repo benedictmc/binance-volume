@@ -1,6 +1,12 @@
-from binance_download import get_historic
-from volume_ping_analysis import ohlc_analyis
+from API import binance_api
+from analysis import volume_analysis
 import datetime
+from db import db
+from itertools import groupby
+
+db_volume = db['binance-volume-download']
+volume_collection = db_volume['volume-pings']
+
 
 
 def round_ping(ping):
@@ -9,19 +15,83 @@ def round_ping(ping):
         ping[col] = round(float(ping[col]), 3)
     return ping
 
+
 # end_time is time after ping in minutes
-def get_ping_results(uid=None, ping=None, end_time=30):
+def ping_information(uid=None, ping=None, time_delta=30):
     if not (uid or ping):
         return {}
     if uid: 
         ping = volume_collection.find({"_id" : uid}).limit(1)[0]
+    # time_delta = 85
+    ohlc_data = __smart_binance_dl(ping, time_delta)
+    # analysis_data = ohlc_analyis(ohlc_data) 
+    # print(analysis_data)
+    return ohlc_data
 
-    coin = f"{ping['Coin']}BTC"
+
+def __smart_binance_dl(ping, time_delta):
+    # Check is data is in database , 
+    # >> if all: then do analysis
+    # >> if not all: dl what needs to be downlaoded AND then do analysis
     start_time = int(datetime.datetime.timestamp(ping['Date']))*1000
-    end_time = start_time+60*end_time*1000
-    ohlc_data = get_historic(coin, '1m', start_time=start_time, end_time=end_time)
-    analysis_data = ohlc_analyis(ohlc_data) 
-    print(analysis_data)
-    # analysis_data['coin'] = coin
-    # analysis_data['date'] = ping['Datetime']
-    # analysis_data['_id'] = uid  
+    end_time = start_time+60*time_delta*1000
+    coin = f"{ping['Coin']}BTC"
+    ohlc_collection = db['coins_ohlc'][coin]
+    data = ohlc_collection.find({"timestamp" : {'$gte': start_time, '$lte': end_time}})
+    amount_in_db = data.count()
+    
+    if data.count() == time_delta:
+        print("Retriving from db")
+        # All data is in db; retriving 
+        return list(data)
+    else:
+        one_minute = 60*1000
+        round_start_time = start_time + (one_minute - (start_time % one_minute))
+
+        ids = [i for i in range(round_start_time, end_time, one_minute)]
+
+        not_in = ohlc_collection.find({"_id" : { '$in': ids }}, {"_id":1})
+        ids_in_db = [d['_id'] for d in list(not_in)]
+        ids_not_in_db =  list(set(ids) - set(ids_in_db))
+        ids_not_in_db.sort()
+        
+        dl_ids = []
+        x = [j-i for i, j in zip(ids_not_in_db[:-1], ids_not_in_db[1:])]
+
+        if all_equal(x):
+            start_time = ids_not_in_db[0]
+            end_time = ids_not_in_db[-1]
+            ohlc_list = list(data)
+            new_ohlc = __download_and_add(coin, start_time, end_time)
+            ohlc_list.extend(new_ohlc)
+        else:
+            # Need to figure out this part.
+            # This would be when there are different sections of time that need to be downloaded.
+            # More then likely wont happen. 
+            # I could also just put ids that not present in db
+            # I would be dling more then I need there though
+            pass
+        return ohlc_list
+
+
+def __download_and_add(coin, start_time, end_time):
+    # Downloading all data and putting it in the db 
+    binance_api.get_historic(coin, '1m', start_time=start_time, end_time=end_time)
+    columns = ['timestamp', 'open', 'high', 'low', 'close', 'volume']
+    ohlc_data = binance_api.get_historic(coin, '1m', start_time=start_time, end_time=end_time)
+    ohlc_collection = db['coins_ohlc'][coin]
+    ohlc_list = []
+    for ohlc in ohlc_data:
+        entry = {}
+        for i, col in enumerate(columns):
+            entry[col] = ohlc[i]
+            entry['_id'] = ohlc[0]
+        ohlc_list.append(entry)
+    ohlc_collection.insert_many(ohlc_list)
+    return ohlc_list
+
+
+
+def all_equal(iterable):
+    g = groupby(iterable)
+    return next(g, True) and not next(g, False)
