@@ -87,7 +87,7 @@ def __download_and_add(coin, start_time, end_time):
             entry[col] = ohlc[i]
             entry['_id'] = ohlc[0]
         ohlc_list.append(entry)
-    ohlc_collection.insert_many(ohlc_list)
+    ohlc_collection.insert_many(ohlc_list, ordered=False)
     return ohlc_list
 
 
@@ -95,3 +95,10 @@ def __download_and_add(coin, start_time, end_time):
 def all_equal(iterable):
     g = groupby(iterable)
     return next(g, True) and not next(g, False)
+
+
+def clean_ohlc(ohlc_data):
+    for row in ohlc_data:
+        del row['_id']
+        row['time'] = row['timestamp']
+        del row['timestamp']        

@@ -33,6 +33,7 @@ def volume_pings():
 def volume_stats(uid):
     try:
         ohlc_data = ping_information(uid=uid)
+        clean_ohlc(ohlc_data)
         return jsonify(ohlc_data)
     except Exception as e:
         print(e)
