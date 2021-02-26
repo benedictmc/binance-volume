@@ -11,6 +11,7 @@ import logging
 import subprocess
 from pymongo import MongoClient
 import hashlib
+    import traceback
 
 
 # Database Config

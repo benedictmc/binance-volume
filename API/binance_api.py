@@ -3,6 +3,7 @@ from pymongo import MongoClient
 import time
 import schedule
 
+
 BASE_URL = "https://api.binance.com/api/v3"
 
 

@@ -102,3 +102,42 @@ def clean_ohlc(ohlc_data):
         del row['_id']
         row['time'] = row['timestamp']
         del row['timestamp']        
+
+
+def split_data_schema(ohlc_data):
+    schema, data = [], []
+    if len(ohlc_data) > 0:
+        key_list = ohlc_data[0].keys()
+        for i, key in enumerate(key_list):
+            if key == 'time':
+                schema.insert(0, {
+                    "column": "Date",
+                    "format" :"%Y-%m-%d %H:%M:%S",
+                    "index": 0,
+                    "name": "Date",
+                    "type": "date"
+                })
+                continue
+
+            schema.append({
+                "column": key.capitalize(),
+                "index": i+1,
+                "name": key.capitalize(),
+                "type": "number"
+            })
+
+    cols = ['time', 'open', 'high', 'low' , 'close']
+    for ohlc in ohlc_data:
+        row = []
+        for col in cols: 
+            if col == 'time':
+                ts = datetime.datetime.fromtimestamp(ohlc[col] / 1e3)
+                dt = ts.strftime("%Y-%m-%d %H:%M:%S")
+                row.append(dt)
+                continue
+            row.append(ohlc[col])   
+        data.append(row)
+
+    return schema, data
+
+

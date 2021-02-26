@@ -3,6 +3,7 @@ from pymongo import MongoClient
 import datetime
 from utils import *
 from db import db
+import traceback
 
 app = Flask(__name__)
 
@@ -34,8 +35,11 @@ def volume_stats(uid):
     try:
         ohlc_data = ping_information(uid=uid)
         clean_ohlc(ohlc_data)
-        return jsonify(ohlc_data)
+        print(ohlc_data[0])
+        schema, data = split_data_schema(ohlc_data)
+        return jsonify([data, schema])
     except Exception as e:
+        print(traceback.format_exc())
         print(e)
         return "Did not work"
     
